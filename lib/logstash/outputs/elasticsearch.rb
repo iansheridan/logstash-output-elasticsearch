@@ -38,25 +38,25 @@ require 'logstash-output-elasticsearch_jars.rb'
 #
 # By default all bulk requests to ES are synchronous. Not all events in the bulk requests
 # always make it successfully. For example, there could be events which are not formatted
-# correctly for the index they are targeting (type mismatch in mapping). So that we minimize loss of 
-# events, we have a specific retry policy in place. We retry all events which fail to be reached by 
-# Elasticsearch for network related issues. We retry specific events which exhibit errors under a separate 
-# policy described below. Events of this nature are ones which experience ES error codes described as 
+# correctly for the index they are targeting (type mismatch in mapping). So that we minimize loss of
+# events, we have a specific retry policy in place. We retry all events which fail to be reached by
+# Elasticsearch for network related issues. We retry specific events which exhibit errors under a separate
+# policy described below. Events of this nature are ones which experience ES error codes described as
 # retryable errors.
 #
 # *Retryable Errors:*
 #
 # - 429, Too Many Requests (RFC6585)
 # - 503, The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.
-# 
+#
 # Here are the rules of what is retried when:
 #
 # - Block and retry all events in bulk response that experiences transient network exceptions until
 #   a successful submission is received by Elasticsearch.
-# - Retry subset of sent events which resulted in ES errors of a retryable nature which can be found 
+# - Retry subset of sent events which resulted in ES errors of a retryable nature which can be found
 #   in RETRYABLE_CODES
-# - For events which returned retryable error codes, they will be pushed onto a separate queue for 
-#   retrying events. events in this queue will be retried a maximum of 5 times by default (configurable through :max_retries). The size of 
+# - For events which returned retryable error codes, they will be pushed onto a separate queue for
+#   retrying events. events in this queue will be retried a maximum of 5 times by default (configurable through :max_retries). The size of
 #   this queue is capped by the value set in :retry_max_items.
 # - Events from the retry queue are submitted again either when the queue reaches its max size or when
 #   the max interval time is reached, which is set in :retry_max_interval.
@@ -79,13 +79,13 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
 
   # The index type to write events to. Generally you should try to write only
   # similar events to the same 'type'. String expansion `%{foo}` works here.
-  # 
+  #
   # Deprecated in favor of `document_type` field.
   config :index_type, :validate => :string, :deprecated => "Please use the 'document_type' setting instead. It has the same effect, but is more appropriately named."
 
   # The document type to write events to. Generally you should try to write only
   # similar events to the same 'type'. String expansion `%{foo}` works here.
-  # Unless you set 'document_type', the event 'type' will be used if it exists 
+  # Unless you set 'document_type', the event 'type' will be used if it exists
   # otherwise the document type will be assigned the value of 'logs'
   config :document_type, :validate => :string
 
@@ -131,28 +131,28 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
   config :cluster, :validate => :string
 
   # For the `node` protocol, if you do not specify `host`, it will attempt to use
-  # multicast discovery to connect to Elasticsearch.  If http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_prefer_unicast_over_multicast[multicast is disabled] in Elasticsearch, 
+  # multicast discovery to connect to Elasticsearch.  If http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_prefer_unicast_over_multicast[multicast is disabled] in Elasticsearch,
   # you must include the hostname or IP address of the host(s) to use for Elasticsearch unicast discovery.
   # Remember the `node` protocol uses the http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-transport.html#modules-transport[transport] address (eg. 9300, not 9200).
   #     `"127.0.0.1"`
   #     `["127.0.0.1:9300","127.0.0.2:9300"]`
   # When setting hosts for `node` protocol, it is important to confirm that at least one non-client
-  # node is listed in the `host` list.  Also keep in mind that the `host` parameter when used with 
-  # the `node` protocol is for *discovery purposes only* (not for load balancing).  When multiple hosts 
-  # are specified, it will contact the first host to see if it can use it to discover the cluster.  If not, 
-  # then it will contact the second host in the list and so forth. With the `node` protocol, 
+  # node is listed in the `host` list.  Also keep in mind that the `host` parameter when used with
+  # the `node` protocol is for *discovery purposes only* (not for load balancing).  When multiple hosts
+  # are specified, it will contact the first host to see if it can use it to discover the cluster.  If not,
+  # then it will contact the second host in the list and so forth. With the `node` protocol,
   # Logstash will join the Elasticsearch cluster as a node client (which has a copy of the cluster
-  # state) and this node client is the one that will automatically handle the load balancing of requests 
-  # across data nodes in the cluster.  
-  # If you are looking for a high availability setup, our recommendation is to use the `transport` protocol (below), 
+  # state) and this node client is the one that will automatically handle the load balancing of requests
+  # across data nodes in the cluster.
+  # If you are looking for a high availability setup, our recommendation is to use the `transport` protocol (below),
   # set up multiple http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html[client nodes] and list the client nodes in the `host` parameter.
-  # 
+  #
   # For the `transport` protocol, it will load balance requests across the hosts specified in the `host` parameter.
   # Remember the `transport` protocol uses the http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-transport.html#modules-transport[transport] address (eg. 9300, not 9200).
   #     `"127.0.0.1"`
   #     `["127.0.0.1:9300","127.0.0.2:9300"]`
   # There is also a `sniffing` option (see below) that can be used with the transport protocol to instruct it to use the host to sniff for
-  # "alive" nodes in the cluster and automatically use it as the hosts list (but will skip the dedicated master nodes).  
+  # "alive" nodes in the cluster and automatically use it as the hosts list (but will skip the dedicated master nodes).
   # If you do not use the sniffing option, it is important to exclude http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html[dedicated master nodes] from the `host` list
   # to prevent Logstash from sending bulk requests to the master nodes. So this parameter should only reference either data or client nodes.
   #
@@ -184,7 +184,7 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
   # Run the Elasticsearch server embedded in this process.
   # This option is useful if you want to run a single Logstash process that
   # handles log processing and indexing; it saves you from needing to run
-  # a separate Elasticsearch process. An example use case is 
+  # a separate Elasticsearch process. An example use case is
   # proof-of-concept testing.
   # WARNING: This is not recommended for production use!
   config :embedded, :validate => :boolean, :default => false
@@ -228,10 +228,10 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
   # bidirectional communication on the port 9300 (or whichever port you have
   # configured).
   #
-  # If you do not specify the `host` parameter, it will use  multicast for http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery-zen.html[Elasticsearch discovery].  While this may work in a test/dev environment where multicast is enabled in 
+  # If you do not specify the `host` parameter, it will use  multicast for http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery-zen.html[Elasticsearch discovery].  While this may work in a test/dev environment where multicast is enabled in
   # Elasticsearch, we strongly recommend http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_prefer_unicast_over_multicast[disabling multicast]
   # in Elasticsearch.  To connect to an Elasticsearch cluster with multicast disabled,
-  # you must include the `host` parameter (see relevant section above).  
+  # you must include the `host` parameter (see relevant section above).
   #
   # The 'transport' protocol will connect to the host you specify and will
   # not show up as a 'node' in the Elasticsearch cluster. This is useful
@@ -361,7 +361,7 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
       client_settings["network.host"] = @bind_host if @bind_host
       client_settings["transport.tcp.port"] = @bind_port if @bind_port
       client_settings["client.transport.sniff"] = @sniffing
- 
+
       if @node_name
         client_settings["node.name"] = @node_name
       else
@@ -501,7 +501,7 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
   def receive(event)
     return unless output?(event)
 
-    # block until we have not maxed out our 
+    # block until we have not maxed out our
     # retry queue. This is applying back-pressure
     # to slow down the receive-rate
     @retry_flush_mutex.synchronize {
@@ -525,7 +525,9 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
       :_type => type,
       :_routing => @routing ? event.sprintf(@routing) : nil
     }
-    
+
+    params.select! { |p| not p.nil? }
+
     params[:_upsert] = LogStash::Json.load(event.sprintf(@upsert)) if @action == 'update' && @upsert != ""
 
     buffer_receive([event.sprintf(@action), params, event])
@@ -583,19 +585,19 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
 
     @retry_teardown_requested.make_true
     # First, make sure retry_timer_thread is stopped
-    # to ensure we do not signal a retry based on 
+    # to ensure we do not signal a retry based on
     # the retry interval.
     Thread.kill(@retry_timer_thread)
     @retry_timer_thread.join
-    # Signal flushing in the case that #retry_flush is in 
+    # Signal flushing in the case that #retry_flush is in
     # the process of waiting for a signal.
     @retry_flush_mutex.synchronize { @retry_queue_needs_flushing.signal }
-    # Now, #retry_flush is ensured to not be in a state of 
+    # Now, #retry_flush is ensured to not be in a state of
     # waiting and can be safely joined into the main thread
     # for further final execution of an in-process remaining call.
     @retry_thread.join
 
-    # execute any final actions along with a proceeding retry for any 
+    # execute any final actions along with a proceeding retry for any
     # final actions that did not succeed.
     buffer_flush(:final => true)
     retry_flush
@@ -713,11 +715,11 @@ class LogStash::Outputs::ElasticSearch < LogStash::Outputs::Base
   end
 
   private
-  # in charge of submitting any actions in @retry_queue that need to be 
+  # in charge of submitting any actions in @retry_queue that need to be
   # retried
   #
   # This method is not called concurrently. It is only called by @retry_thread
-  # and once that thread is ended during the teardown process, a final call 
+  # and once that thread is ended during the teardown process, a final call
   # to this method is done upon teardown in the main thread.
   def retry_flush()
     unless @retry_queue.empty?
